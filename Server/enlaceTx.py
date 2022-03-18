@@ -7,7 +7,7 @@
 #  Camada de Enlace
 ####################################################
 
-# Importa pacote de tempo
+# Importa datagrama de tempo
 import time
 
 # Threads

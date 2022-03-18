@@ -6,10 +6,10 @@
 #17/02/2018
 ####################################################
 
-# Importa pacote de comunicação serial
+# Importa datagrama de comunicação serial
 import serial
 
-# importa pacote para conversão binário ascii
+# importa datagrama para conversão binário ascii
 import binascii
 
 #################################
