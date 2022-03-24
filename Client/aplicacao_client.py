@@ -7,7 +7,7 @@ from utils import *
 #   python -m serial.tools.list_ports
 
 # Abrindo imagem
-enderecoImg = r"C:\Users\felip\Desktop\Insper 4\CFC\P4\Client\file.jpg"
+enderecoImg = r"C:\Users\paulo\Projetos_facul\CamFis\projetos\projeto4clone\P4-CFC\Client\file.jpg"
 imgBinary = open(enderecoImg, 'rb').read()
 # print(imgBinary)
 
@@ -18,7 +18,9 @@ print(f'''Quantidade de datagramas: {len(datagramas)},
           Tamanho primeiro datagrama: {len(datagramas[0])}, 
           EOP primeiro datagrama: {datagramas[0][-4:]}''')
 
-serialName = "COM7"
+print(datagramas[0])
+
+serialName = "COM4"
 simulation = 1
 
 def main():
@@ -33,79 +35,90 @@ def main():
     # print(msgT1[0], type(msgT1[0]))
 
     while not inicio:
+        print("rodei")
         inicio_timer = time.time()
+        print(msgT1)
         com1.sendData(np.asarray(msgT1), inicio_timer)
-        log(msgT1, "envia", simulation)
+        # log(msgT1, "envia", simulation)
 
-        print("Mandando Handshake") 
+        print(f'''Mandando Handshake para servidor 
+                com id: {identificador_servidor}''') 
         time.sleep(5)
 
         inicio_timer = time.time()
         rxBuffer, nRx = com1.getData(len(msgT1), inicio_timer, 2)
-        log(rxBuffer, "receb", simulation)
+        print(rxBuffer)
+        # log(rxBuffer, "receb", simulation)
         if rxBuffer[0] == 2 and rxBuffer[2]==identificador_servidor:
             inicio = True
         
     print("Saiu do inicio")
+    print("Envio do arquivo vai começar")
     cont = 1
 
     while cont <= numPck:
         msgT3 = datagramas[cont - 1]
+        print(msgT3)
 
         timer1 = time.time()
         timer2 = time.time()
         com1.sendData(np.asarray(msgT3), timer1)
-        log(msgT3, "envia", simulation)
+        time.sleep(1)
+        # log(msgT3, "envia", simulation)
+        print("-"*50)
+        print(f"Enviando msg tipo 3 com indice: {cont}")
 
         verifica = True
         while verifica:
 
+            print("Inciando verificações")
             inicio_timer = time.time()
-            rxBuffer, nRx = com1.getData(10, inicio_timer, 2)
+            rxBuffer, nRx = com1.getData(10, inicio_timer, 10)
+            print(rxBuffer)
             len_content = rxBuffer[5] + 4
             inicio_timer = time.time()
             rxBuffer_content, nRx = com1.getData(len_content, inicio_timer, 2)
-            log(rxBuffer+rxBuffer_content, "receb", simulation)
+            # log(rxBuffer+rxBuffer_content, "receb", simulation)
 
 
             if rxBuffer[0] == 4:
+                print("Cliente recebeu msg tipo 4!")
                 verifica = False
                 cont+=1
             
             elif (time.time() - timer1) > 5:
+                print("Timer 1 maior que 5 segundos")
+                print("Reenviando msg tipo 3")
                 timer1 = time.time()
+                print(msgT3)
                 com1.sendData(np.asarray(msgT3), timer1)
-                log(msgT3, "envia", simulation)
+                # log(msgT3, "envia", simulation)
 
             if (time.time()-timer2) > 20:
+                print("Timer 2 maior que 20 segundos")
+                print("Enviando msg tipo 5")
                 msgT5 = constroi_msgT5(numPck)
-
+                print(msgT5)
                 inicio_timer = time.time()
                 com1.sendData(np.asarray(msgT5), inicio_timer)
-                log(msgT3, "envia", simulation)
+                # log(msgT3, "envia", simulation)
 
                 print(":-(")
                 com1.disable()
                 return
 
             elif rxBuffer[0] == 6:
+                print("Recebeu msg tipo 6 (erro)")
+                print(f"Redefinindo cont:{cont} para {rxBuffer[6]}")
+                print("Reenviando msg tipo 3 com cont corrigido")
+                print("Resetando os dois timers")
                 cont = rxBuffer[6]
                 timer1 = time.time()
                 timer2 = time.time()
                 com1.sendData(np.asarray(msgT3), timer1)
-                log(msgT3, "envia", simulation)
+                # log(msgT3, "envia", simulation)
 
-                
-
-                
-
-            
-
-
-
-
-
-
+    
     print("Sucesso!!!")
         
         # tempo_inicial = time.time()
