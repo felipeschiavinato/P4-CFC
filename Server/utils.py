@@ -1,4 +1,5 @@
 from re import S
+import time
 
 
 def constroi_msgT2(identificador):
@@ -80,24 +81,26 @@ def constroi_msgT6(numero_ultimo_pacote):
     return datagrama
 
 
-# def constroi_log(msg, direction):
-#     time = time.time()
-#     tipo = msg[0]
-#     size = len(msg)
-#     if tipo == 3:
-#         packID = msg[4]
-#         len_pack = msg[3]
-#         s = f"{time}/{direction}/{tipo}/{size}/{packID}/{len_pack}"
-#     else:
-#         s = f"{time}/{direction}/{tipo}/{size}"
+def constroi_log(msg, direction):
+    tempo = time.time()
+    tempo = time.gmtime(tempo)
+    tempo = time.strftime("%Y-%m-%d %H:%M:%S", tempo)
+    tipo = msg[0]
+    size = len(msg)
+    if tipo == 3:
+        packID = msg[4]
+        len_pack = msg[3]
+        s = f"{tempo}/{direction}/{tipo}/{size}/{packID}/{len_pack}\n"
+    else:
+        s = f"{tempo}/{direction}/{tipo}/{size}\n"
 
-#     return s
+    return s
 
-# def log(msg, direction, simulation):
+def log(msg, direction, simulation):
 
-#     txt = r"C:\Users\felip\Desktop\Insper 4\CFC\P3\CamadasPJ3\Server\Server{}.txt".format(simulation)
-#     f = open(txt, "w")
-#     f.write(constroi_log(msg,direction))
-#     f.close()
+    txt = r"C:\Users\paulo\Projetos_facul\CamFis\projetos\projeto4clone\P4-CFC\Server\server{}.txt".format(simulation)
+    f = open(txt, "a")
+    f.write(constroi_log(msg,direction))
+    f.close()
 
-#     return None
+    return None

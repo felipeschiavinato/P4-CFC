@@ -1,4 +1,5 @@
 from logging import exception
+from socket import timeout
 from utils import *
 import random as rd
 from enlace import *
@@ -7,8 +8,8 @@ import numpy as np
 
 #   python -m serial.tools.list_ports
 
-serialName = "COM7"
-simulation = 1
+serialName = "COM4"
+simulation = 5
 
 def main():
     identificador = 1
@@ -23,30 +24,40 @@ def main():
 
     while ocioso:
         inicio_timer = time.time()
-        rxBuffer, nRx = com1.getData(10, inicio_timer, 5)
+        timeout = com1.rx.getIsEmpty()
+        if not timeout:
+            rxBuffer, nRx = com1.getData(10, inicio_timer, 5)
         
-        if rxBuffer[0] == 1:
-            print("Recebi uma msg tipo 1")
-            rxBufferContent, nRx = com1.getData(4, inicio_timer, 5)
+        # timeout = False
+        # if rxBuffer == -1:
+        #     timeout = True
+        
+        if not timeout:
+            if rxBuffer[0] == 1:
+                print("Recebi uma msg tipo 1")
+                rxBufferContent, nRx = com1.getData(4, inicio_timer, 5)
 
-            #log(rxBuffer+rxBufferContent, "receb", simulation)
+                log(rxBuffer+rxBufferContent, "receb", simulation)
 
-            if rxBuffer[2] == identificador:
-                print(f"O identificador da msg:{rxBuffer[2]} é igual ao meu:{identificador}")
-                numPckg = rxBuffer[3]
-                ocioso = False
+                if rxBuffer[2] == identificador:
+                    print(f"O identificador da msg:{rxBuffer[2]} é igual ao meu:{identificador}")
+                    numPckg = rxBuffer[3]
+                    ocioso = False
+            else:
+                print("Não recebi uma msg tipo 1")
+                len_content = rxBuffer[5] + 4
+                rxBufferContent, nRx = com1.getData(len_content, inicio_timer, 5)
+                log(rxBuffer+rxBufferContent, "receb", simulation)
         else:
-            print("Não recebi uma msg tipo 1")
-            len_content = rxBuffer[5] + 4
-            rxBufferContent, nRx = com1.getData(len_content, inicio_timer, 5)
-            #log(rxBuffer+rxBufferContent, "receb", simulation)
+            print("timeout no get data")
+            time.sleep(2)
 
     print("Nao esta mais ocioso")
     
     print("Envia msg tipo 2")
     msgT2 = constroi_msgT2(rxBuffer[2])
     com1.sendData(np.asarray(msgT2))
-    #log(msgT2, "envia", simulation)
+    log(msgT2, "envia", simulation)
     
     cont = 1
     imgBytes = b''
@@ -62,94 +73,113 @@ def main():
 
 
         verifica = True
+        com1.rx.clearBuffer()
         while verifica:
-
-            print("Lendo os dados")
             inicio_timer = time.time()
-            rxBuffer_head, nRx = com1.getData(10, inicio_timer, 10)
-            print(rxBuffer_head, len(rxBuffer_head))
-            print("Peguei o head")
-            len_content = rxBuffer[5] + 4
-            print(f'h0: {rxBuffer[0]}')
-            print(f'h1: {rxBuffer[1]}')
-            print(f'h2: {rxBuffer[2]}')
-            print(f'h3: {rxBuffer[3]}')
-            print(f'h4: {rxBuffer[4]}')
-            print(f'h5: {rxBuffer[5]}')
-            print(f'h6: {rxBuffer[6]}')
-            print(f'h7: {rxBuffer[7]}')
-            print(f'h8: {rxBuffer[8]}')
-            print(f'h9: {rxBuffer[9]}')
+            timeout = com1.rx.getIsEmpty()
+            if not timeout:
+                rxBuffer_head, nRx = com1.getData(10, inicio_timer, 10)
+            
 
-            if rxBuffer[5] > 114:
-                print("Mensagem de erro")
-                msgT6 = constroi_msgT6(cont)
-                com1.sendData(np.asarray(msgT6))
-                break
+            # timeout = False
+            # if rxBuffer_head == -1:
+            #     print("timeout no get data do head")
+            #     timeout = True
+
+            # print(rxBuffer_head, len(rxBuffer_head))
+            # print("Peguei o head")
+            if not timeout:
+                len_content = rxBuffer_head[5] + 4
+            # print(f'h0: {rxBuffer_head[0]}')
+            # print(f'h1: {rxBuffer_head[1]}')
+            # print(f'h2: {rxBuffer_head[2]}')
+            # print(f'h3: {rxBuffer_head[3]}')
+            # print(f'h4: {rxBuffer_head[4]}')
+            # print(f'h5: {rxBuffer_head[5]}')
+            # print(f'h6: {rxBuffer_head[6]}')
+            # print(f'h7: {rxBuffer_head[7]}')
+            # print(f'h8: {rxBuffer_head[8]}')
+            # print(f'h9: {rxBuffer_head[9]}')
+
+            if not timeout:
+                if rxBuffer_head[5] > 114:
+                    print("Mensagem de erro")
+                    msgT6 = constroi_msgT6(cont)
+                    com1.sendData(np.asarray(msgT6))
+                    break
 
            
             inicio_timer = time.time()
-            rxBuffer_content, nRx = com1.getData(len_content, inicio_timer,5)
-            print(rxBuffer_content)
-            #log(rxBuffer_head+rxBuffer_content, "receb", simulation)
+            if not timeout:
+                rxBuffer_content, nRx = com1.getData(len_content, inicio_timer,5)
+            
+            # print("Lendo os dados")
 
-            if rxBuffer_head[0]==3:
-                print("Msg tipo 3")
-                tamanho_payload = rxBuffer_head[5]
-                if (cont == rxBuffer_head[4] and 
-                    rxBuffer_content[tamanho_payload-4:] == b'\xAA\xBB\xCC\xDD'):
-                    print("Pacote ok!")
-                    imgBytes += rxBuffer_content[:tamanho_payload-4]
-                    
-                    print("Enviando msg tipo 4")
-                    msgT4 = constroi_msgT4(cont)
-                    com1.sendData(np.asarray(msgT4))
-                    #log(msgT4, "envia", simulation)
+            # timeoutContent = False
+            # if rxBuffer_content == -1:
+            #     print("timeout no get data do content")
+            #     timeoutContent = True
 
-                    cont += 1
-                    verifica = False
+            # print(rxBuffer_content)
+
+            if not timeout:
+                log(rxBuffer_head+rxBuffer_content, "receb", simulation)
+                if rxBuffer_head[0]==3:
+                    print("Msg tipo 3")
+                    tamanho_payload = rxBuffer_head[5]
+                    # print(f'eop: {rxBuffer_content[tamanho_payload:]}')
+                    # print(f'rxBuffer 4: {rxBuffer_head[4]}')
+                
+                    if (cont == rxBuffer_head[4] and 
+                        rxBuffer_content[tamanho_payload:] == b'\xAA\xBB\xCC\xDD'):
+                        print("Pacote ok!")
+                        imgBytes += rxBuffer_content[:tamanho_payload]
+                        # print(rxBuffer_content[:tamanho_payload])
+                        
+                        print("Enviando msg tipo 4")
+                        msgT4 = constroi_msgT4(cont)
+                        com1.sendData(np.asarray(msgT4))
+                        log(msgT4, "envia", simulation)
+
+                        cont += 1
+                        verifica = False
+                    else:
+                        print("Pacote defeituoso")
+                        print("Enviando msg tipo 6")
+
+                        msgT6 = constroi_msgT6(cont)
+                        com1.sendData(np.asarray(msgT6))
+                        log(msgT6, "envia", simulation)
+
+                        verifica = False
+
                 else:
-                    print("Pacote deefituoso")
-                    print("Enviando msg tipo 6")
+                    time.sleep(1)
 
-                    msgT6 = constroi_msgT6(cont)
-                    com1.sendData(np.asarray(msgT6))
-                    #log(msgT6, "envia", simulation)
+                    if (time.time() - timer2 > 20):
+                        print("Timer 2 > 20 segundos")
+                        ocioso = True
 
-                    verifica = False
+                        print("Enviando msg tipo 5")
+                        msgT5 = constroi_msgT5()
 
-            else:
-                time.sleep(1)
+                        inicio_timer = time.time()
+                        com1.sendData(np.asarray(msgT5), inicio_timer)
+                        log(msgT5, "envia", simulation)
 
-                if (time.time() - timer2 > 20):
-                    print("Timer 2 > 20 segundos")
-                    ocioso = True
+                        print(":-(")
+                        com1.disable()
+                        return
 
-                    print("Enviando msg tipo 5")
-                    msgT5 = constroi_msgT5()
+                    elif (time.time() - timer1 > 2):
+                        print("Timer 1 > 2 segundos")
+                        print("Enviando msg tipo 6")
+                        msgT6 = constroi_msgT6(cont)
+                        com1.sendData(np.asarray(msgT6))
+                        log(msgT6, "envia", simulation)
 
-                    inicio_timer = time.time()
-                    com1.sendData(np.asarray(msgT5), inicio_timer)
-                    #log(msgT5, "envia", simulation)
-
-                    print(":-(")
-                    com1.disable()
-                    return
-
-                elif (time.time() - timer1 > 2):
-                    print("Timer 1 > 2 segundos")
-                    print("Enviando msg tipo 6")
-                    msgT6 = constroi_msgT6(cont)
-                    com1.sendData(np.asarray(msgT6))
-                    #log(msgT6, "envia", simulation)
-
-                    timer1 = time.time()
-
-
-
-
-
-
+                        timer1 = time.time()
+                        
 
 
     print("-"*50)
