@@ -1,8 +1,9 @@
 from struct import pack
+import time
 
 
 def constroi_datagramas(imgBinary):
-    datagramas = []
+    datagramas = {}
     lenB = len(imgBinary)
 
     len_datagramas = lenB/114 if lenB % 114 == 0 else int(lenB/114) + 1
@@ -35,12 +36,13 @@ def constroi_datagramas(imgBinary):
         # print(comando[0:2])
         # print(comando[2])
         # break
-        datagramas.append(payload)
+        datagramas[numero] = payload
         i += 114
         numero += 1
         computado += 114
 
     return datagramas
+
 
 def constroi_handshake(identificador, size_datagrama):
     # h0, h1, h2
@@ -73,26 +75,28 @@ def constroi_msgT5(size_datagrama):
     datagrama = tipo + h3 + h4 + h5 + zeros + eop
     return datagrama
 
-# def constroi_log(msg, direction):
-#     time = time.time()
-#     tipo = msg[0]
-#     size = len(msg)
-#     if tipo == 3:
-#         packID = msg[4]
-#         len_pack = msg[3]
-#         s = f"{time}/{direction}/{tipo}/{size}/{packID}/{len_pack}"
-#     else:
-#         s = f"{time}/{direction}/{tipo}/{size}"
+def constroi_log(msg, direction):
+    tempo = time.time()
+    tempo = time.gmtime(tempo)
+    tempo = time.strftime("%Y-%m-%d %H:%M:%S", tempo)
+    tipo = msg[0]
+    size = len(msg)
+    if tipo == 3:
+        packID = msg[4]
+        len_pack = msg[3]
+        s = f"{tempo}/{direction}/{tipo}/{size}/{packID}/{len_pack}\n"
+    else:
+        s = f"{tempo}/{direction}/{tipo}/{size}\n"
 
-#     return s
+    return s
     
-# def log(msg, direction, simulation):
+def log(msg, direction, simulation):
     
-#     txt = r"C:\Users\felip\Desktop\Insper 4\CFC\P3\CamadasPJ3\Server\Client{}.txt".format(simulation)
-#     f = open(txt, "w")
-#     f.write(constroi_log(msg,direction))
-#     f.close()
+    txt = r"C:\Users\felip\Desktop\Insper 4\CFC\P4\Client\Client{}.txt".format(simulation)
+    f = open(txt, "a")
+    f.write(constroi_log(msg,direction))
+    f.close()
 
-#     return None
+    return None
 
     
