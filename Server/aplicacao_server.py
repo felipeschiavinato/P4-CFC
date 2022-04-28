@@ -8,7 +8,7 @@ import numpy as np
 
 #   python -m serial.tools.list_ports
 
-serialName = "COM4"
+serialName = "COM11"
 simulation = 5
 
 def main():
@@ -121,10 +121,12 @@ def main():
             #     timeoutContent = True
 
             # print(rxBuffer_content)
-
+            msgTipo3 = False
             if not timeout:
                 log(rxBuffer_head+rxBuffer_content, "receb", simulation)
                 if rxBuffer_head[0]==3:
+                    
+
                     print("Msg tipo 3")
                     tamanho_payload = rxBuffer_head[5]
                     # print(f'eop: {rxBuffer_content[tamanho_payload:]}')
@@ -135,6 +137,7 @@ def main():
                         print("Pacote ok!")
                         imgBytes += rxBuffer_content[:tamanho_payload]
                         # print(rxBuffer_content[:tamanho_payload])
+                        msgTipo3 = True
                         
                         print("Enviando msg tipo 4")
                         msgT4 = constroi_msgT4(cont)
@@ -153,39 +156,39 @@ def main():
 
                         verifica = False
 
-                else:
-                    time.sleep(1)
+            if not msgTipo3:
+                time.sleep(1)
 
-                    if (time.time() - timer2 > 20):
-                        print("Timer 2 > 20 segundos")
-                        ocioso = True
+                if (time.time() - timer2 > 20):
+                    print("Timer 2 > 20 segundos")
+                    ocioso = True
 
-                        print("Enviando msg tipo 5")
-                        msgT5 = constroi_msgT5()
+                    print("Enviando msg tipo 5")
+                    msgT5 = constroi_msgT5()
 
-                        inicio_timer = time.time()
-                        com1.sendData(np.asarray(msgT5), inicio_timer)
-                        log(msgT5, "envia", simulation)
+                    inicio_timer = time.time()
+                    com1.sendData(np.asarray(msgT5))
+                    log(msgT5, "envia", simulation)
 
-                        print(":-(")
-                        com1.disable()
-                        return
+                    print(":-(")
+                    com1.disable()
+                    return
 
-                    elif (time.time() - timer1 > 2):
-                        print("Timer 1 > 2 segundos")
-                        print("Enviando msg tipo 6")
-                        msgT6 = constroi_msgT6(cont)
-                        com1.sendData(np.asarray(msgT6))
-                        log(msgT6, "envia", simulation)
+                elif (time.time() - timer1 > 2):
+                    print("Timer 1 > 2 segundos")
+                    print("Enviando msg tipo 6")
+                    msgT6 = constroi_msgT6(cont)
+                    com1.sendData(np.asarray(msgT6))
+                    log(msgT6, "envia", simulation)
 
-                        timer1 = time.time()
+                    timer1 = time.time()
                         
 
 
     print("-"*50)
     print("Comunicação encerrada, escrevendo imagem")
     print("-"*50)
-    imgW = r"C:\Users\paulo\Projetos_facul\CamFis\projetos\projeto4clone\P4-CFC\Server\file.jpg"
+    imgW = r"C:\Users\felip\Desktop\Insper 4\CFC\P4\P4-CFC\Server\file.jpg"
     f = open(imgW, "wb")
     f.write(imgBytes)
     f.close()

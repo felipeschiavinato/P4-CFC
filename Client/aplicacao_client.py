@@ -7,7 +7,7 @@ from utils import *
 #   python -m serial.tools.list_ports
 
 # Abrindo imagem
-enderecoImg = r"C:\Users\felip\Desktop\Insper 4\CFC\P4\Client\file.jpg"
+enderecoImg = r"C:\Users\felip\Desktop\Insper 4\CFC\P4\P4-CFC\Client\file.jpg"
 imgBinary = open(enderecoImg, 'rb').read()
 # print(imgBinary)
 
@@ -21,7 +21,7 @@ print(f'''Quantidade de datagramas: {len(datagramas)},
 print(datagramas)
 
 serialName = "COM7"
-simulation = 5
+simulation = 5  
 
 def main():
     com1 = enlace(serialName)

@@ -98,7 +98,7 @@ def constroi_log(msg, direction):
 
 def log(msg, direction, simulation):
 
-    txt = r"C:\Users\paulo\Projetos_facul\CamFis\projetos\projeto4clone\P4-CFC\Server\server{}.txt".format(simulation)
+    txt = r"C:\Users\felip\Desktop\Insper 4\CFC\P4\P4-CFC\Server\Server{}.txt".format(simulation)
     f = open(txt, "a")
     f.write(constroi_log(msg,direction))
     f.close()
